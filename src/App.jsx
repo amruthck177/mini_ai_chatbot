@@ -74,12 +74,36 @@ const detectMood = (text) => {
 const formatTime = (date) =>
   date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+const THEMES = {
+  classic: {
+    name: 'Classic Hero',
+    yellow: '#FFE000', red: '#E8001C', blue: '#0057FF', black: '#0A0A0A', white: '#FFF9F0',
+    halftone: 'rgba(0,0,0,0.05)'
+  },
+  neon: {
+    name: 'Neon Hero',
+    yellow: '#00F3FF', red: '#FF00E5', blue: '#7000FF', black: '#0A0A0A', white: '#1A1A2E',
+    halftone: 'rgba(0,243,255,0.08)'
+  },
+  noir: {
+    name: 'Noir Detective',
+    yellow: '#D1D1D1', red: '#333333', blue: '#666666', black: '#050505', white: '#F5F5F5',
+    halftone: 'rgba(0,0,0,0.1)'
+  },
+  forest: {
+    name: 'Forest Guardian',
+    yellow: '#C0FF00', red: '#795548', blue: '#2E7D32', black: '#1B1B1B', white: '#F1F8E9',
+    halftone: 'rgba(46,125,50,0.08)'
+  }
+};
+
 export default function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [mood, setMood] = useState('happy');
   const [darkMode, setDarkMode] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState('classic');
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_GEMINI_API_KEY || '');
   const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash');
   const [showApiKey, setShowApiKey] = useState(true);
@@ -90,6 +114,8 @@ export default function App() {
 
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  const theme = THEMES[currentTheme];
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -118,7 +144,6 @@ export default function App() {
     triggerSfx();
 
     try {
-      // Use v1beta for gemini-1.5-flash compatibility with system_instruction
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -190,14 +215,18 @@ export default function App() {
   };
 
   return (
-    <div className={`comic-app ${darkMode ? 'dark' : ''}`}>
+    <div className={`comic-app ${darkMode ? 'dark' : ''} theme-${currentTheme}`}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&display=swap');
 
         :root {
-          --yellow: #FFE000; --red: #E8001C; --blue: #0057FF; --black: #0A0A0A; --white: #FFF9F0;
+          --yellow: ${theme.yellow}; 
+          --red: ${theme.red}; 
+          --blue: ${theme.blue}; 
+          --black: ${theme.black}; 
+          --white: ${theme.white};
           --bg: var(--white); --panel: #FFF; --text: var(--black); --border: var(--black);
-          --halftone: rgba(0,0,0,0.05);
+          --halftone: ${theme.halftone};
         }
 
         .dark {
@@ -352,7 +381,17 @@ export default function App() {
           />
           <select 
             className="api-input" 
-            style={{flex:'0 0 140px', fontSize:'0.8rem'}}
+            style={{flex:'0 0 130px', fontSize:'0.8rem'}}
+            value={currentTheme}
+            onChange={(e) => setCurrentTheme(e.target.value)}
+          >
+            {Object.entries(THEMES).map(([id, t]) => (
+              <option key={id} value={id}>{t.name}</option>
+            ))}
+          </select>
+          <select 
+            className="api-input" 
+            style={{flex:'0 0 110px', fontSize:'0.8rem'}}
             value={selectedModel}
             onChange={(e) => setSelectedModel(e.target.value)}
           >
