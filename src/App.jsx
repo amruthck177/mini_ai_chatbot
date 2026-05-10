@@ -104,6 +104,7 @@ export default function App() {
   const [mood, setMood] = useState('happy');
   const [darkMode, setDarkMode] = useState(false);
   const [currentTheme, setCurrentTheme] = useState('classic');
+  const [heroName, setHeroName] = useState(localStorage.getItem('heroName') || 'Sidekick');
   const [apiKey, setApiKey] = useState(import.meta.env.VITE_GEMINI_API_KEY || '');
   const [selectedModel, setSelectedModel] = useState('gemini-1.5-flash');
   const [showApiKey, setShowApiKey] = useState(true);
@@ -127,6 +128,14 @@ export default function App() {
     setTimeout(() => setSfxBurst(null), 850);
   }, []);
 
+  const changeIdentity = () => {
+    const name = prompt("Identify yourself, Hero!", heroName);
+    if (name) {
+      setHeroName(name);
+      localStorage.setItem('heroName', name);
+    }
+  };
+
   const sendMessage = useCallback(async (text) => {
     const content = (text || input).trim();
     if (!content || loading) return;
@@ -148,7 +157,9 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          system_instruction: { 
+            parts: [{ text: `${SYSTEM_PROMPT}\n\nIMPORTANT: The person you are talking to is a fellow hero named "${heroName}". Always address them as ${heroName} or with heroic respect!` }] 
+          },
           contents: newMessages.map(msg => ({
             role: msg.role === 'assistant' ? 'model' : 'user',
             parts: [{ text: msg.content }]
@@ -417,6 +428,9 @@ export default function App() {
             </div>
           </div>
           <div style={{display:'flex', gap:'10px', alignItems:'center'}}>
+            <button className="act-btn" onClick={changeIdentity} style={{opacity:1, fontSize:'0.7rem', background:'var(--yellow)', color:'#000', padding:'4px 8px', borderRadius:'4px', border:'2px solid #000', fontWeight:'bold'}}>
+              IDENTITY: {heroName}
+            </button>
             <div className="meta" style={{background:'var(--blue)', color:'#fff', padding:'5px 10px', borderRadius:'15px'}}>
               LOGS: {messages.length}
             </div>
